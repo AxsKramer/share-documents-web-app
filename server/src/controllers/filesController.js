@@ -2,6 +2,7 @@ const multer = require('multer');
 const shortId = require('shortid');
 const fs = require('fs');
 const Link = require('../models/Link');
+const path = require('path');
 
 const uploadFile = async (req, res, next) => {
   
@@ -29,7 +30,7 @@ const uploadFile = async (req, res, next) => {
 
 const deleteFile = async (req, res) => {
   try {
-    fs.unlinkSync(__dirname + `/../uploads/${req.file}`);
+    fs.unlinkSync(path.resolve(__dirname, `../uploads/${req.file}` ));
     console.log('File deleted');
   } catch (error) {
     console.log(error.message)
@@ -38,18 +39,23 @@ const deleteFile = async (req, res) => {
 
 const download = async (req, res, next) => {
   const link = await Link.findOne({name: req.params.file});
+  console.log(link.id)
   
-  const fileDownload = __dirname + '/../uploads/' + req.params.file;
+  const fileDownload = path.resolve(__dirname, `../uploads/${req.params.file}`);
   res.download(fileDownload);
 
-  if(link.download === 1){
+  if(!link){
+    console.log("Se acabo :(");
+  }
+
+  if(link.uploads === 1){
     req.file = link.name;
-    await Link.findOneAndRemove(link.id);
-    next()
+    await Link.findOneAndRemove({_id: link.id});
   }else{
-    link.download--;
+    link.uploads--;
     await link.save();
   }
+  next();
 }
 
 module.exports = {uploadFile, download, deleteFile}

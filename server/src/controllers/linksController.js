@@ -5,13 +5,15 @@ const { validationResult } = require('express-validator');
 
 const newLink = async (req,res, next) => {
 
+  console.log(req.body.password)
+
   const errores = validationResult(req);
   if(!errores.isEmpty()) return res.status(400).json({errores: errores.array()});
 
   const link = new Link();
   link.url = shortid.generate();
-  linkn.name = req.body.name;
-  link.original_name = req.body.originla_name;
+  link.name = req.body.name;
+  link.original_name = req.body.original_name;
 
   if(req.user) {
     if(req.body.uploads){
@@ -19,7 +21,7 @@ const newLink = async (req,res, next) => {
     }
     if(req.body.password){
       const salt = await bcrypt.genSalt(10);
-      link.password = await bcrypt.hash(password, salt);
+      link.password = await bcrypt.hash(req.body.password, salt);
     }
 
     link.author = req.user.id
@@ -70,7 +72,7 @@ const checkPassword = async (req, res, next) => {
 }
 
 const getLink = async (req, res, next) => {
-  const link = await Link.findOne({url: req.params.utl});
+  const link = await Link.findOne({url: req.params.url});
 
   if(!link){
     res.status(404).json({msg: 'Link does not exist'});
